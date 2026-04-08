@@ -1,7 +1,6 @@
 // --- Variáveis Globais e Configurações Iniciais ---
 var alturaPagina = mmToPt(297);
 var participantesOriginal = [];
-var revertAllButton = null;
 
 function mmToPt(mm) {
     return mm * 2.835;
@@ -13,19 +12,13 @@ window.addEventListener('load', function() {
     if (dateContainer) {
         dateContainer.textContent = new Date().toLocaleDateString('pt-BR');
     }
-
     window.scrollTo(0, 0);
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
 });
 
 // --- Lógica dos Botões Iniciais ---
 document.getElementById('customFileInput').addEventListener('click', function () {
     document.getElementById('fileInput').click();
 });
-
-document.getElementById('uploadButton').style.display = 'none';
 
 // --- Processamento do Arquivo CSV ---
 document.getElementById('fileInput').addEventListener('change', function () {
@@ -65,31 +58,26 @@ document.getElementById('fileInput').addEventListener('change', function () {
 // --- Renderização da Tabela ---
 function exibirParticipantes(participantes) {
     document.body.classList.add('tabela-exibida');
-    
-    // Esconde elementos iniciais
     document.querySelectorAll('.botao-inicial, #customFileInput, .imagens-container').forEach(el => el.style.display = 'none');
     
-    // ESTILIZAÇÃO DO BOTÃO PDF (TUDO IGUAL AO ORIGINAL)
     var pdfBtn = document.getElementById('pdfButton');
     pdfBtn.style.display = 'inline-block';
-    pdfBtn.className = 'button'; // Garante que herda o CSS da classe .button
+    pdfBtn.className = 'button'; 
 
-    // Botão Início
     if (!document.getElementById('backToStartButton')) {
         var backBtn = document.createElement('button');
         backBtn.id = 'backToStartButton';
         backBtn.textContent = 'Início';
-        backBtn.className = 'button'; // Classe original
+        backBtn.className = 'button';
         backBtn.addEventListener('click', () => location.reload());
         pdfBtn.parentNode.appendChild(backBtn);
     }
 
-    // Botão Reverter
     if (!document.getElementById('RevertButton')) {
         var revBtn = document.createElement('button');
         revBtn.id = 'RevertButton';
         revBtn.textContent = 'Reverter';
-        revBtn.className = 'button'; // Classe original
+        revBtn.className = 'button';
         revBtn.addEventListener('click', () => exibirParticipantes(participantesOriginal));
         pdfBtn.insertAdjacentElement("afterend", revBtn);
     }
@@ -181,7 +169,7 @@ function atualizarNumeroTotalPessoas() {
     document.getElementById('numero-total-pessoas').textContent = total;
 }
 
-// --- PDF COM CÁLCULOS COMPLETOS ---
+// --- LÓGICA DE GERAR E ENVIAR (NAVIGATOR.SHARE) ---
 document.getElementById('pdfButton').addEventListener('click', function () {
     var selecionados = [];
     document.querySelectorAll('.participante-checkbox:checked').forEach(cb => {
@@ -223,5 +211,21 @@ document.getElementById('pdfButton').addEventListener('click', function () {
         }
     };
 
-    pdfMake.createPdf(docDefinition).download('enquete.pdf');
+    var dataFormatada = new Date().toLocaleDateString('pt-BR').replace(/\//g, '_');
+
+    // MÁGICA: Tenta compartilhar antes de baixar
+    pdfMake.createPdf(docDefinition).getBuffer(function (buffer) {
+        var file = new File([buffer], 'enquete_' + dataFormatada + '.pdf', { type: 'application/pdf' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+                files: [file],
+                title: 'Enquete Zoom',
+                text: 'Relatório de Assistência'
+            }).catch(console.error);
+        } else {
+            // Se o navegador não suporta compartilhar (ex: PC antigo), ele baixa normal
+            pdfMake.createPdf(docDefinition).download('enquete_' + dataFormatada + '.pdf');
+        }
+    });
 });
