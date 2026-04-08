@@ -1,0 +1,18 @@
+{
+  "name": "enquete",
+  "version": "1.0.0",
+  "description": "",
+  "main": "pdfmake.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pdfmake": "^0.2.7"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

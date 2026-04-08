@@ -1,0 +1,432 @@
+th,
+td {
+  border: 4px solid rgb(0, 0, 0);
+  padding: 8px;
+}
+
+#pdfButton {
+  display: none;
+}
+
+.assistencia-cell-input {
+  width: 50px;
+  /* Defina o tamanho desejado para o campo de entrada numérico */
+  box-sizing: border-box;
+  /* Mantém a largura total do campo, incluindo bordas e padding */
+}
+
+.assistencia-col {
+  width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assistencia-total-cell {
+  font-weight: bold;
+  border-bottom: 2px solid rgb(10, 10, 10);
+}
+
+.menor-largura-cell {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Quadrado atras da tabela aparecer só na página da tabela */
+body:not(.tabela-exibida) .table-container {
+  display: none;
+}
+
+#tabela-participantes tr.unchecked {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgb(0, 0, 0);
+  text-decoration-style: double;
+  opacity: 0.2;
+  background-color: rgba(6, 6, 6, 0.906);
+}
+
+#tabela-participantes th:first-child,
+#tabela-participantes td:first-child {
+  width: 59px;
+}
+
+#tabela-participantes tr:nth-child(odd) td {
+  background-color: #afafaf;
+}
+
+#tabela-participantes tr:nth-child(even) td {
+  background-color: #d6d6d6d9;
+}
+
+#tabela-participantes tr:first-child th,
+#tabela-participantes tr:last-child td {
+  background-color: #8f8f8f;
+}
+
+#numero-total-pessoas {
+  font-weight: bold;
+  text-align: center;
+}
+
+#total-pessoas-label {
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Esconder a primeira coluna da tabela */
+#tabela-participantes th:first-child,
+#tabela-participantes td:first-child {
+  display: none;
+}
+
+/* Não permitir rolagem página inicial */
+body {
+  overflow: hidden;
+}
+
+body {
+  background: linear-gradient(-50deg, #e8e8e8, #949494, #6b6b6b, #0a0a0a);
+  background-size: 400% 400%;
+  animation: gradient 8s ease infinite;
+  height: 120vh;
+}
+
+/* Animação clique do botão */
+button {
+  transition: transform 0.5s ease-out, box-shadow 0.5s ease-out, background-color 0.5s ease-out, border 0.5s ease-out;
+}
+
+button:active {
+  transform: translateY(20px);
+  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.2);
+  background-color: #ccc;
+  border: 2px solid #333;
+}
+
+/* Animação imagens */
+.botao-inicial-container {
+  display: flex;
+  flex-wrap: wrap;
+  /* Allow the buttons to wrap to a new row if needed */
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  /* Adjust the width of the container */
+  max-width: 540px;
+}
+
+.imagem-arquivo,
+.imagem-enquete {
+  position: absolute;
+  z-index: 0;
+  animation: moveImage 0.7s ease-out;
+}
+
+@keyframes moveButton {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(20px);
+  }
+}
+
+@keyframes moveImage {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body.tabela-exibida .botao-inicial-container {
+  display: none;
+}
+
+
+/* Aparecer apenas pagina inicial */
+body.tabela-exibida #dateContainer {
+  display: none;
+}
+
+/* Data */
+#dateContainer {
+  opacity: 0.4;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 570;
+  font-size: 36px;
+  color: rgb(219, 219, 219);
+  padding: 10px;
+  width: 110px;
+  text-shadow: 7px 6px 7px #000, -2px 1px 0 black, 1px 1px 0 black;
+  -webkit-text-stroke: 1px black;
+
+}
+
+.imagem-arquivo {
+  width: 120px;
+  height: 120px;
+  position: absolute;
+  left: -120px;
+  /* Ajuste a posição esquerda para mover a imagem para a esquerda */
+  top: 196px;
+  /* Ajuste a posição superior para mover a imagem para cima */
+  filter: drop-shadow(7px 7px 7px rgba(0, 0, 0, 0.7));
+
+}
+
+.imagem-enquete {
+  width: 126px;
+  height: 120px;
+  position: absolute;
+  left: -130px;
+  /* Ajuste a posição esquerda para mover a imagem para a esquerda */
+  top: 50px;
+  /* Ajuste a posição superior para mover a imagem para cima */
+  filter: drop-shadow(7px 7px 7px rgba(0, 0, 0, 0.7));
+}
+
+/* Adicionar sombra ao texto dos botões */
+.botao-inicial.button {
+  text-shadow: 2px 6px 7px rgba(0, 4, 0, 0.5);
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
+}
+
+/* Centralizar Botões e mais alterações */
+.botao-inicial-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+}
+
+.botao-inicial.button {
+  margin-bottom: 1.5rem;
+  padding: 2.5rem 3rem;
+  font-size: 1.5rem;
+  width: 500px;
+  box-shadow: 20px 30px 35px rgba(0, 0, 0, 0.4);
+  border-width: 8px;
+  font-family: 'Poppins' cursive;
+}
+
+/* Adicionar efeito de transparência de vidro ao elemento */
+.botao-inicial-container {
+  background-color: rgba(255, 255, 255, .04);
+  border-radius: 16px;
+  box-shadow: 20px 30px 30px rgba(2, 20, 30, 0.2);
+
+  height: 400px;
+  width: 540px;
+}
+
+body.tabela-exibida {
+  overflow-y: auto;
+}
+
+/* Mudar estilo botão inicial */
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10rem;
+  color: #000000;
+  text-transform: uppercase;
+  font-size: 1rem;
+  letter-spacing: .10rem;
+  transition: all .6s;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  font-weight: bold;
+  border: 4px solid black;
+}
+
+.button:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(178, 178, 178);
+  border-radius: 10rem;
+  z-index: -2;
+}
+
+.button:before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background-color: #555555cb;
+  /* Substitua darken($color,15%) pelo valor desejado */
+  transition: all .3s;
+  border-radius: 10rem;
+  z-index: -1;
+}
+
+
+.button:hover {
+  color: #fff;
+}
+
+.button:hover:before {
+  width: 100%;
+}
+
+/* Tabela preview centralizada */
+#tabela-participantes td.nome-participante {
+  text-align: center;
+}
+
+body.tabela-exibida #tabela-participantes {
+  width: 70%;
+  max-height: none;
+  overflow: auto;
+}
+
+/* Tamanho das letras e célula */
+#tabela-participantes th,
+#tabela-participantes td {
+  font-size: 2.5rem;
+  /* Ajuste o tamanho da fonte */
+  padding: 15px;
+  /* Ajuste o espaçamento interno */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Coluna participantes tamanho */
+.assistencia-col {
+  width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tamanho do input assistencia */
+.assistencia-cell-input {
+  width: 25%;
+  box-sizing: border-box;
+  font-size: 30px;
+}
+
+#tabela-participantes {
+
+  padding: 0;
+  margin: 0 auto;
+  /* Centralizar a tabela horizontalmente */
+  max-height: calc(100vh - 50px);
+  /* Ajustar a altura máxima, considerando o espaço de 50px */
+  overflow: auto;
+  /* Adicionar barras de rolagem quando a tabela exceder a altura */
+  table-layout: fixed;
+  /* Manter o layout fixo para as células da tabela */
+  margin-bottom: 20px;
+  /* Adicionar um espaço de 50px na parte inferior da tabela */
+}
+
+body.tabela-exibida #tabela-participantes {
+  width: 95%;
+  max-height: none;
+  overflow: auto;
+}
+
+/* Alterar tamanho tabela e outros */
+.table-container {
+  text-shadow: 4px 7px 10px rgba(0, 2, 0, 0.4);
+  margin: 0;
+  padding: 20px;
+  /* Adicionar espaçamento interno apenas na parte superior e inferior */
+  border-radius: 30px;
+  background-color: #949494;
+  padding-bottom: 30px;
+}
+
+/* Acompanhar largura da página */
+@media screen and (max-width: 600px) {
+  #pdfButton {
+    right: auto;
+    margin-left: 0;
+  }
+
+  #revertButton {
+    left: auto;
+    margin-left: 0;
+  }
+
+  #backToStartButton {
+    left: auto;
+    margin-left: 0;
+  }
+}
+
+
+
+/* Botões */
+#pdfButton {
+  top: -0.2%;
+  font-size: 200%;
+  width: 25%;
+  height: 6.4%;
+  left: 1%;
+  text-shadow: 4px 7px 10px rgba(0, 4, 0, 0.5);
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+#RevertButton {
+  left: 13%;
+  font-size: 200%;
+  width: 25%;
+  height: 6%;
+  text-shadow: 4px 7px 10px rgba(0, 4, 0, 0.5);
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+
+}
+
+#backToStartButton {
+  left: 24%;
+  font-size: 200%;
+  width: 25%;
+  height: 6%;
+  text-shadow: 4px 7px 10px rgba(0, 4, 0, 0.5);
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}

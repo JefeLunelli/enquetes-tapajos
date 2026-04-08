@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/vfs_fonts.js"></script>
+    <meta name="theme-color" content="#a9a9a9">
+    <link rel="icon" type="image/png" href="img/planilhas-do-google.png">
+    <title>Enquete Zoom</title>
+</head>
+<body>
+    <div id="dateContainer"></div>
+    
+    <div class="botao-inicial-container">
+        <button class="botao-inicial button" onclick="window.open('https://jworg.zoom.us/account/report/export/livepoll?meetingNumber=89563111957')">
+            Baixar Enquete
+        </button>
+        <div class="imagens-container">
+            <img src="img/download-file.png" alt="baixar-enquete" class="imagem-enquete">
+            <img src="img/search-file.png" alt="escolher-arquivo" class="imagem-arquivo">
+        </div>
+        <input type="file" id="fileInput" style="display: none;">
+        <button class="botao-inicial button" id="customFileInput">Escolher arquivo</button>
+    </div>
+
+    <button id="uploadButton">Enviar</button>
+
+    <div class="table-container">
+        <table id="tabela-participantes"></table>
+    </div>
+
+    <button id="pdfButton">Gerar PDF</button>
+
+    <script src="scripts/main.js"></script>
+</body>
+</html>
