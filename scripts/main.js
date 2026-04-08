@@ -6,19 +6,19 @@ function mmToPt(mm) {
     return mm * 2.835;
 }
 
-// Executar ao carregar a página
 window.addEventListener('load', function() {
     var dateContainer = document.getElementById('dateContainer');
-    if (dateContainer) {
-        dateContainer.textContent = new Date().toLocaleDateString('pt-BR');
-    }
+    if (dateContainer) dateContainer.textContent = new Date().toLocaleDateString('pt-BR');
     window.scrollTo(0, 0);
 });
 
-// --- Lógica dos Botões Iniciais ---
+// --- Lógica da Camuflagem (Clica no invisível através do visível) ---
 document.getElementById('customFileInput').addEventListener('click', function () {
     document.getElementById('fileInput').click();
 });
+
+// Oculta o botão de upload que você não usa na interface
+document.getElementById('uploadButton').style.display = 'none';
 
 // --- Processamento do Arquivo CSV ---
 document.getElementById('fileInput').addEventListener('change', function () {
@@ -58,11 +58,15 @@ document.getElementById('fileInput').addEventListener('change', function () {
 // --- Renderização da Tabela ---
 function exibirParticipantes(participantes) {
     document.body.classList.add('tabela-exibida');
-    document.querySelectorAll('.botao-inicial, #customFileInput, .imagens-container').forEach(el => el.style.display = 'none');
+    
+    // CAMUFLA TUDO DO TOPO
+    document.querySelectorAll('.botao-inicial, #customFileInput, .imagens-container, #fileInput').forEach(el => {
+        el.style.display = 'none';
+    });
     
     var pdfBtn = document.getElementById('pdfButton');
     pdfBtn.style.display = 'inline-block';
-    pdfBtn.className = 'button'; 
+    pdfBtn.className = 'button'; // APLICA O CSS ORIGINAL
 
     if (!document.getElementById('backToStartButton')) {
         var backBtn = document.createElement('button');
@@ -71,15 +75,6 @@ function exibirParticipantes(participantes) {
         backBtn.className = 'button';
         backBtn.addEventListener('click', () => location.reload());
         pdfBtn.parentNode.appendChild(backBtn);
-    }
-
-    if (!document.getElementById('RevertButton')) {
-        var revBtn = document.createElement('button');
-        revBtn.id = 'RevertButton';
-        revBtn.textContent = 'Reverter';
-        revBtn.className = 'button';
-        revBtn.addEventListener('click', () => exibirParticipantes(participantesOriginal));
-        pdfBtn.insertAdjacentElement("afterend", revBtn);
     }
 
     var tabela = document.getElementById('tabela-participantes');
@@ -169,7 +164,7 @@ function atualizarNumeroTotalPessoas() {
     document.getElementById('numero-total-pessoas').textContent = total;
 }
 
-// --- LÓGICA DE GERAR E ENVIAR (NAVIGATOR.SHARE) ---
+// --- LÓGICA DE ENVIAR PDF (ORIGINAL) ---
 document.getElementById('pdfButton').addEventListener('click', function () {
     var selecionados = [];
     document.querySelectorAll('.participante-checkbox:checked').forEach(cb => {
@@ -179,6 +174,7 @@ document.getElementById('pdfButton').addEventListener('click', function () {
 
     if (selecionados.length === 0) return;
 
+    // Cálculos de layout originais
     const alturaUtil = alturaPagina - 60;
     const hLinha = Math.min(50, (alturaUtil / (selecionados.length + 2)));
     const fSize = Math.max(12, hLinha * 0.45);
@@ -213,18 +209,11 @@ document.getElementById('pdfButton').addEventListener('click', function () {
 
     var dataFormatada = new Date().toLocaleDateString('pt-BR').replace(/\//g, '_');
 
-    // MÁGICA: Tenta compartilhar antes de baixar
     pdfMake.createPdf(docDefinition).getBuffer(function (buffer) {
         var file = new File([buffer], 'enquete_' + dataFormatada + '.pdf', { type: 'application/pdf' });
-        
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-                files: [file],
-                title: 'Enquete Zoom',
-                text: 'Relatório de Assistência'
-            }).catch(console.error);
+            navigator.share({ files: [file], title: 'Enquete Zoom' });
         } else {
-            // Se o navegador não suporta compartilhar (ex: PC antigo), ele baixa normal
             pdfMake.createPdf(docDefinition).download('enquete_' + dataFormatada + '.pdf');
         }
     });
