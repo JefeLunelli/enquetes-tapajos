@@ -37,7 +37,6 @@ document.getElementById('fileInput').addEventListener('change', function () {
             var lines = csvContent.split(/\r?\n/);
             var participantes = [];
 
-            // Procura o início dos dados ignorando o cabeçalho do Zoom
             var startIndex = lines.findIndex(line => 
                 line.includes('Nome de usuário') && 
                 (line.includes('Quantas pessoas') || line.includes('Quantidade de participantes'))
@@ -49,7 +48,6 @@ document.getElementById('fileInput').addEventListener('change', function () {
                     var line = lines[i].trim();
                     if (line === '' || line.startsWith('#')) continue; 
                     
-                    // Lógica para nomes com vírgula (ex: "André, Gabriela")
                     var row = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
                     row = row.map(value => value.replace(/^"|"$/g, '').trim());
                     
@@ -64,30 +62,34 @@ document.getElementById('fileInput').addEventListener('change', function () {
     }
 });
 
-// --- Renderização da Tabela com Filtros ---
+// --- Renderização da Tabela ---
 function exibirParticipantes(participantes) {
     document.body.classList.add('tabela-exibida');
+    
+    // Esconde elementos iniciais
     document.querySelectorAll('.botao-inicial, #customFileInput, .imagens-container').forEach(el => el.style.display = 'none');
     
+    // ESTILIZAÇÃO DO BOTÃO PDF (TUDO IGUAL AO ORIGINAL)
     var pdfBtn = document.getElementById('pdfButton');
     pdfBtn.style.display = 'inline-block';
+    pdfBtn.className = 'button'; // Garante que herda o CSS da classe .button
 
-    // Cria botão Início se não existir
+    // Botão Início
     if (!document.getElementById('backToStartButton')) {
         var backBtn = document.createElement('button');
         backBtn.id = 'backToStartButton';
         backBtn.textContent = 'Início';
-        backBtn.classList.add('button');
+        backBtn.className = 'button'; // Classe original
         backBtn.addEventListener('click', () => location.reload());
         pdfBtn.parentNode.appendChild(backBtn);
     }
 
-    // Cria botão Reverter se não existir
+    // Botão Reverter
     if (!document.getElementById('RevertButton')) {
         var revBtn = document.createElement('button');
         revBtn.id = 'RevertButton';
         revBtn.textContent = 'Reverter';
-        revBtn.classList.add('button');
+        revBtn.className = 'button'; // Classe original
         revBtn.addEventListener('click', () => exibirParticipantes(participantesOriginal));
         pdfBtn.insertAdjacentElement("afterend", revBtn);
     }
@@ -128,7 +130,6 @@ function exibirParticipantes(participantes) {
             assistTd.addEventListener('click', function() { criarCampoDeEntrada(this); });
             linha.appendChild(assistTd);
 
-            // Clique no nome alterna o checkbox
             nomeTd.addEventListener('click', function() {
                 var cb = linha.querySelector('.participante-checkbox');
                 cb.checked = !cb.checked;
@@ -140,7 +141,6 @@ function exibirParticipantes(participantes) {
         }
     });
 
-    // Linha do Total
     var linhaTotal = document.createElement('tr');
     linhaTotal.innerHTML = '<td></td><td>Assistência total</td><td id="numero-total-pessoas">0</td>';
     tabela.appendChild(linhaTotal);
@@ -158,7 +158,6 @@ function createCell(tag, text, escape) {
     return cell;
 }
 
-// --- Edição Manual da Assistência ---
 function criarCampoDeEntrada(cell) {
     var valAnterior = parseInt(cell.textContent) || 0;
     var input = document.createElement('input');
@@ -182,7 +181,7 @@ function atualizarNumeroTotalPessoas() {
     document.getElementById('numero-total-pessoas').textContent = total;
 }
 
-// --- Geração do PDF com Cálculos de Layout Original ---
+// --- PDF COM CÁLCULOS COMPLETOS ---
 document.getElementById('pdfButton').addEventListener('click', function () {
     var selecionados = [];
     document.querySelectorAll('.participante-checkbox:checked').forEach(cb => {
@@ -192,7 +191,6 @@ document.getElementById('pdfButton').addEventListener('click', function () {
 
     if (selecionados.length === 0) return;
 
-    // CÁLCULOS ORIGINAIS DE ESPAÇAMENTO
     const alturaUtil = alturaPagina - 60;
     const hLinha = Math.min(50, (alturaUtil / (selecionados.length + 2)));
     const fSize = Math.max(12, hLinha * 0.45);
