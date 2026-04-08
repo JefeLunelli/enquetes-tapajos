@@ -9,38 +9,25 @@ function mmToPt(mm) {
 
 // Executar ao carregar a página
 window.addEventListener('load', function() {
-    // Data atual
     var dateContainer = document.getElementById('dateContainer');
     if (dateContainer) {
         dateContainer.textContent = new Date().toLocaleDateString('pt-BR');
     }
 
-    // Reset de scroll
     window.scrollTo(0, 0);
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
     }
-
-    // Nota: Mantive a chamada caso exista no seu styles.css, mas se der erro, pode comentar.
-    if (typeof applyStylesBasedOnDevice === "function") applyStylesBasedOnDevice();
 });
 
 // --- Lógica dos Botões Iniciais ---
-var buttonIniciais = document.querySelectorAll('.botao-inicial');
-buttonIniciais.forEach(btn => {
-    btn.addEventListener('click', function () {
-        this.style.backgroundColor = '#ccc';
-        setTimeout(() => { this.style.backgroundColor = ''; }, 1000);
-    });
-});
-
 document.getElementById('customFileInput').addEventListener('click', function () {
     document.getElementById('fileInput').click();
 });
 
 document.getElementById('uploadButton').style.display = 'none';
 
-// --- Processamento do Arquivo ---
+// --- Processamento do Arquivo CSV ---
 document.getElementById('fileInput').addEventListener('change', function () {
     if (this.files.length > 0) {
         var file = this.files[0];
@@ -50,7 +37,7 @@ document.getElementById('fileInput').addEventListener('change', function () {
             var lines = csvContent.split(/\r?\n/);
             var participantes = [];
 
-            // AJUSTE: Procura a linha que contém os cabeçalhos (aceita o formato novo "Quantidade de participantes:")
+            // Procura o início dos dados ignorando o cabeçalho do Zoom
             var startIndex = lines.findIndex(line => 
                 line.includes('Nome de usuário') && 
                 (line.includes('Quantas pessoas') || line.includes('Quantidade de participantes'))
@@ -62,6 +49,7 @@ document.getElementById('fileInput').addEventListener('change', function () {
                     var line = lines[i].trim();
                     if (line === '' || line.startsWith('#')) continue; 
                     
+                    // Lógica para nomes com vírgula (ex: "André, Gabriela")
                     var row = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
                     row = row.map(value => value.replace(/^"|"$/g, '').trim());
                     
@@ -69,8 +57,6 @@ document.getElementById('fileInput').addEventListener('change', function () {
                         participantes.push(row);
                     }
                 }
-            } else {
-                alert("Não foi possível encontrar os dados da enquete no arquivo. Verifique se o formato está correto.");
             }
             exibirParticipantes(participantes);
         };
@@ -78,27 +64,25 @@ document.getElementById('fileInput').addEventListener('change', function () {
     }
 });
 
-// --- Renderização da Tabela ---
+// --- Renderização da Tabela com Filtros ---
 function exibirParticipantes(participantes) {
     document.body.classList.add('tabela-exibida');
-    document.getElementById('fileInput').style.display = 'none';
-    document.getElementById('uploadButton').style.display = 'none';
-    document.querySelector('button[onclick^="window.open"]').style.display = 'none';
-    document.getElementById('customFileInput').style.display = 'none';
+    document.querySelectorAll('.botao-inicial, #customFileInput, .imagens-container').forEach(el => el.style.display = 'none');
     
     var pdfBtn = document.getElementById('pdfButton');
     pdfBtn.style.display = 'inline-block';
-    pdfBtn.classList.add('button');
 
+    // Cria botão Início se não existir
     if (!document.getElementById('backToStartButton')) {
-        var backToStartButton = document.createElement('button');
-        backToStartButton.id = 'backToStartButton';
-        backToStartButton.textContent = 'Início';
-        backToStartButton.classList.add('button');
-        backToStartButton.addEventListener('click', () => location.reload());
-        pdfBtn.parentNode.appendChild(backToStartButton);
+        var backBtn = document.createElement('button');
+        backBtn.id = 'backToStartButton';
+        backBtn.textContent = 'Início';
+        backBtn.classList.add('button');
+        backBtn.addEventListener('click', () => location.reload());
+        pdfBtn.parentNode.appendChild(backBtn);
     }
 
+    // Cria botão Reverter se não existir
     if (!document.getElementById('RevertButton')) {
         var revBtn = document.createElement('button');
         revBtn.id = 'RevertButton';
@@ -109,31 +93,18 @@ function exibirParticipantes(participantes) {
     }
 
     var tabela = document.getElementById('tabela-participantes');
-    tabela.innerHTML = '';
-
-    var cabecalho = document.createElement('tr');
-    cabecalho.appendChild(createCell('th', 'Selecionar', false));
-    cabecalho.appendChild(createCell('th', 'Nomes pelo Zoom', false));
-    var assistenciaCell = createCell('th', 'Assistência', false);
-    assistenciaCell.classList.add('assistencia-col');
-    cabecalho.appendChild(assistenciaCell);
-    tabela.appendChild(cabecalho);
+    tabela.innerHTML = '<tr><th>Selecionar</th><th>Nomes pelo Zoom</th><th class="assistencia-col">Assistência</th></tr>';
 
     participantesOriginal = participantes.map(p => [...p]);
     var nomesAdicionados = {};
-    var nomeIndex = 1;
-    var assistenciaIndex = 4;
 
     participantes.forEach(function (p) {
-        var nome = p[nomeIndex];
-        var assistencia = p[assistenciaIndex];
+        var nome = p[1];
+        var assistencia = p[4];
 
-        // AJUSTE: Filtros para ignorar os cabeçalhos do novo CSV
-        if (nome && assistencia && nome !== 'User Name' && nome !== 'Nome de usuário' && !assistencia.includes('Quantidade') && !nome.toLowerCase().includes('tribuna') && nome !== 'Mesa de som') {
+        if (nome && assistencia && nome !== 'Nome de usuário' && !assistencia.includes('Quantidade') && !nome.toLowerCase().includes('tribuna') && nome !== 'Mesa de som') {
             var linha = document.createElement('tr');
             var jaAdicionado = nomesAdicionados[nome];
-
-            // Verifica se contém números (para o caso do Zoom mandar texto)
             var temNumero = /\d/.test(assistencia);
 
             if (!temNumero || jaAdicionado) {
@@ -149,9 +120,6 @@ function exibirParticipantes(participantes) {
             nomeTd.classList.add('nome-participante');
             linha.appendChild(nomeTd);
 
-            if (assistencia.startsWith('Já informei a assistência')) assistencia = 'Já Informou';
-            
-            // Formata para "X pessoas" se for número puro
             if (!isNaN(parseInt(assistencia)) && assistencia.length < 3) {
                  assistencia = parseInt(assistencia) + ' pessoa' + (parseInt(assistencia) > 1 ? 's' : '');
             }
@@ -160,6 +128,7 @@ function exibirParticipantes(participantes) {
             assistTd.addEventListener('click', function() { criarCampoDeEntrada(this); });
             linha.appendChild(assistTd);
 
+            // Clique no nome alterna o checkbox
             nomeTd.addEventListener('click', function() {
                 var cb = linha.querySelector('.participante-checkbox');
                 cb.checked = !cb.checked;
@@ -171,21 +140,13 @@ function exibirParticipantes(participantes) {
         }
     });
 
+    // Linha do Total
     var linhaTotal = document.createElement('tr');
-    linhaTotal.appendChild(createCell('td', '', false));
-    var labelTotal = createCell('td', 'Assistência total', true);
-    labelTotal.id = 'total-pessoas-label';
-    linhaTotal.appendChild(labelTotal);
-    var valorTotal = createCell('td', '0', true);
-    valorTotal.id = 'numero-total-pessoas';
-    linhaTotal.appendChild(valorTotal);
+    linhaTotal.innerHTML = '<td></td><td>Assistência total</td><td id="numero-total-pessoas">0</td>';
     tabela.appendChild(linhaTotal);
 
     tabela.querySelectorAll('.participante-checkbox').forEach(cb => {
-        cb.addEventListener('change', function() {
-            this.parentNode.parentNode.classList.toggle('unchecked', !this.checked);
-            atualizarNumeroTotalPessoas();
-        });
+        cb.addEventListener('change', atualizarNumeroTotalPessoas);
     });
 
     atualizarNumeroTotalPessoas();
@@ -197,29 +158,17 @@ function createCell(tag, text, escape) {
     return cell;
 }
 
+// --- Edição Manual da Assistência ---
 function criarCampoDeEntrada(cell) {
-    var assistenciaValue = parseInt(cell.textContent) || 0;
+    var valAnterior = parseInt(cell.textContent) || 0;
     var input = document.createElement('input');
     input.type = 'number';
-    input.placeholder = assistenciaValue.toString();
     input.classList.add('assistencia-cell-input');
-    
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-    input.addEventListener('blur', function() {
-        setTimeout(() => {
-            var novo = this.value.trim() === '' ? this.placeholder : this.value;
-            if (novo === '0') {
-                cell.textContent = 'Já Informou';
-                cell.parentNode.querySelector('.participante-checkbox').checked = false;
-                cell.parentNode.classList.add('unchecked');
-            } else {
-                cell.textContent = novo + ' pessoa' + (novo === '1' ? '' : 's');
-                cell.parentNode.querySelector('.participante-checkbox').checked = true;
-                cell.parentNode.classList.remove('unchecked');
-            }
-            atualizarNumeroTotalPessoas();
-        }, 100);
-    });
+    input.onblur = function() {
+        var n = this.value || valAnterior;
+        cell.textContent = n + ' pessoa' + (n > 1 ? 's' : '');
+        atualizarNumeroTotalPessoas();
+    };
     cell.textContent = '';
     cell.appendChild(input);
     input.focus();
@@ -230,22 +179,20 @@ function atualizarNumeroTotalPessoas() {
     document.querySelectorAll('.participante-checkbox:checked').forEach(cb => {
         total += parseInt(cb.parentNode.parentNode.cells[2].textContent) || 0;
     });
-    var el = document.getElementById('numero-total-pessoas');
-    if (el) el.textContent = total;
+    document.getElementById('numero-total-pessoas').textContent = total;
 }
 
+// --- Geração do PDF com Cálculos de Layout Original ---
 document.getElementById('pdfButton').addEventListener('click', function () {
     var selecionados = [];
     document.querySelectorAll('.participante-checkbox:checked').forEach(cb => {
         var row = cb.parentNode.parentNode;
-        selecionados.push({ 
-            nome: row.cells[1].textContent, 
-            assistencia: row.cells[2].textContent 
-        });
+        selecionados.push({ nome: row.cells[1].textContent, assistencia: row.cells[2].textContent });
     });
 
     if (selecionados.length === 0) return;
 
+    // CÁLCULOS ORIGINAIS DE ESPAÇAMENTO
     const alturaUtil = alturaPagina - 60;
     const hLinha = Math.min(50, (alturaUtil / (selecionados.length + 2)));
     const fSize = Math.max(12, hLinha * 0.45);
@@ -256,18 +203,11 @@ document.getElementById('pdfButton').addEventListener('click', function () {
         content: [{
             table: {
                 headerRows: 1,
-                dontBreakRows: true,
                 widths: ['70%', '30%'],
                 body: [
-                    [{ text: 'Nomes pelo Zoom', style: 'tableHeader' }, 
-                     { text: 'Assistência', style: 'tableHeader' }],
-                    ...selecionados.map(p => [
-                        { text: p.nome, style: 'tableCell' }, 
-                        { text: p.assistencia, style: 'tableCell' }
-                    ]),
-                    [{ text: 'Assistência Total', style: 'tableHeader' }, 
-                     { text: document.getElementById('numero-total-pessoas').textContent, 
-                       style: 'tableHeader' }]
+                    [{ text: 'Nomes pelo Zoom', style: 'tableHeader' }, { text: 'Assistência', style: 'tableHeader' }],
+                    ...selecionados.map(p => [{ text: p.nome, style: 'tableCell' }, { text: p.assistencia, style: 'tableCell' }]),
+                    [{ text: 'Assistência Total', style: 'tableHeader' }, { text: document.getElementById('numero-total-pessoas').textContent, style: 'tableHeader' }]
                 ]
             },
             layout: {
@@ -277,24 +217,13 @@ document.getElementById('pdfButton').addEventListener('click', function () {
                 },
                 paddingTop: () => (hLinha * 0.22),
                 paddingBottom: () => (hLinha * 0.22),
-                hLineWidth: (i, node) => 0.5,
-                vLineWidth: (i, node) => 0.5,
             }
         }],
         styles: {
-            tableHeader: { fontSize: fSize + 2, bold: true, alignment: 'center', fillColor: '#A9A9A9' },
+            tableHeader: { fontSize: fSize + 2, bold: true, alignment: 'center' },
             tableCell: { fontSize: fSize, alignment: 'center' }
         }
     };
 
-    var dataFormatada = new Date().toLocaleDateString('pt-BR').replace(/\//g, '_');
-
-    pdfMake.createPdf(docDefinition).getBuffer(function (buffer) {
-        var file = new File([buffer], 'enquete_' + dataFormatada + '.pdf', { type: 'application/pdf' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'Enquete' });
-        } else {
-            pdfMake.createPdf(docDefinition).download('enquete_' + dataFormatada + '.pdf');
-        }
-    });
+    pdfMake.createPdf(docDefinition).download('enquete.pdf');
 });
