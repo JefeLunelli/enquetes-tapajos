@@ -1,26 +1,44 @@
 // --- Variáveis Globais e Configurações Iniciais ---
 var alturaPagina = mmToPt(297);
 var participantesOriginal = [];
+var revertAllButton = null;
 
 function mmToPt(mm) {
     return mm * 2.835;
 }
 
+// Executar ao carregar a página
 window.addEventListener('load', function() {
     var dateContainer = document.getElementById('dateContainer');
-    if (dateContainer) dateContainer.textContent = new Date().toLocaleDateString('pt-BR');
+    if (dateContainer) {
+        dateContainer.textContent = new Date().toLocaleDateString('pt-BR');
+    }
+
     window.scrollTo(0, 0);
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
+    if (typeof applyStylesBasedOnDevice === "function") applyStylesBasedOnDevice();
 });
 
-// --- Lógica da Camuflagem (Clica no invisível através do visível) ---
+// --- Lógica dos Botões Iniciais ---
+var buttonIniciais = document.querySelectorAll('.botao-inicial');
+buttonIniciais.forEach(btn => {
+    btn.addEventListener('click', function () {
+        this.style.backgroundColor = '#ccc';
+        setTimeout(() => { this.style.backgroundColor = ''; }, 1000);
+    });
+});
+
+// Camuflagem: Clicar no botão visível aciona o input escondido
 document.getElementById('customFileInput').addEventListener('click', function () {
     document.getElementById('fileInput').click();
 });
 
-// Oculta o botão de upload que você não usa na interface
 document.getElementById('uploadButton').style.display = 'none';
 
-// --- Processamento do Arquivo CSV ---
+// --- Processamento do Arquivo ---
 document.getElementById('fileInput').addEventListener('change', function () {
     if (this.files.length > 0) {
         var file = this.files[0];
@@ -48,6 +66,8 @@ document.getElementById('fileInput').addEventListener('change', function () {
                         participantes.push(row);
                     }
                 }
+            } else {
+                alert("Não foi possível encontrar os dados da enquete no arquivo.");
             }
             exibirParticipantes(participantes);
         };
@@ -59,26 +79,45 @@ document.getElementById('fileInput').addEventListener('change', function () {
 function exibirParticipantes(participantes) {
     document.body.classList.add('tabela-exibida');
     
-    // CAMUFLA TUDO DO TOPO
-    document.querySelectorAll('.botao-inicial, #customFileInput, .imagens-container, #fileInput').forEach(el => {
-        el.style.display = 'none';
-    });
+    // Esconde os elementos iniciais (Camuflagem total)
+    document.getElementById('fileInput').style.display = 'none';
+    document.getElementById('uploadButton').style.display = 'none';
+    document.querySelector('button[onclick^="window.open"]').style.display = 'none';
+    document.getElementById('customFileInput').style.display = 'none';
+    document.querySelector('.imagens-container').style.display = 'none';
     
     var pdfBtn = document.getElementById('pdfButton');
     pdfBtn.style.display = 'inline-block';
-    pdfBtn.className = 'button'; // APLICA O CSS ORIGINAL
+    pdfBtn.classList.add('button');
 
     if (!document.getElementById('backToStartButton')) {
-        var backBtn = document.createElement('button');
-        backBtn.id = 'backToStartButton';
-        backBtn.textContent = 'Início';
-        backBtn.className = 'button';
-        backBtn.addEventListener('click', () => location.reload());
-        pdfBtn.parentNode.appendChild(backBtn);
+        var backToStartButton = document.createElement('button');
+        backToStartButton.id = 'backToStartButton';
+        backToStartButton.textContent = 'Início';
+        backToStartButton.classList.add('button');
+        backToStartButton.addEventListener('click', () => location.reload());
+        pdfBtn.parentNode.appendChild(backToStartButton);
+    }
+
+    if (!document.getElementById('RevertButton')) {
+        var revBtn = document.createElement('button');
+        revBtn.id = 'RevertButton';
+        revBtn.textContent = 'Reverter';
+        revBtn.classList.add('button');
+        revBtn.addEventListener('click', () => exibirParticipantes(participantesOriginal));
+        pdfBtn.insertAdjacentElement("afterend", revBtn);
     }
 
     var tabela = document.getElementById('tabela-participantes');
-    tabela.innerHTML = '<tr><th>Selecionar</th><th>Nomes pelo Zoom</th><th class="assistencia-col">Assistência</th></tr>';
+    tabela.innerHTML = '';
+
+    var cabecalho = document.createElement('tr');
+    cabecalho.appendChild(createCell('th', 'Selecionar', false));
+    cabecalho.appendChild(createCell('th', 'Nomes pelo Zoom', false));
+    var assistenciaCell = createCell('th', 'Assistência', false);
+    assistenciaCell.classList.add('assistencia-col');
+    cabecalho.appendChild(assistenciaCell);
+    tabela.appendChild(cabecalho);
 
     participantesOriginal = participantes.map(p => [...p]);
     var nomesAdicionados = {};
@@ -87,7 +126,7 @@ function exibirParticipantes(participantes) {
         var nome = p[1];
         var assistencia = p[4];
 
-        if (nome && assistencia && nome !== 'Nome de usuário' && !assistencia.includes('Quantidade') && !nome.toLowerCase().includes('tribuna') && nome !== 'Mesa de som') {
+        if (nome && assistencia && nome !== 'User Name' && nome !== 'Nome de usuário' && !assistencia.includes('Quantidade') && !nome.toLowerCase().includes('tribuna') && nome !== 'Mesa de som') {
             var linha = document.createElement('tr');
             var jaAdicionado = nomesAdicionados[nome];
             var temNumero = /\d/.test(assistencia);
@@ -105,6 +144,8 @@ function exibirParticipantes(participantes) {
             nomeTd.classList.add('nome-participante');
             linha.appendChild(nomeTd);
 
+            if (assistencia.startsWith('Já informei a assistência')) assistencia = 'Já Informou';
+            
             if (!isNaN(parseInt(assistencia)) && assistencia.length < 3) {
                  assistencia = parseInt(assistencia) + ' pessoa' + (parseInt(assistencia) > 1 ? 's' : '');
             }
@@ -125,11 +166,20 @@ function exibirParticipantes(participantes) {
     });
 
     var linhaTotal = document.createElement('tr');
-    linhaTotal.innerHTML = '<td></td><td>Assistência total</td><td id="numero-total-pessoas">0</td>';
+    linhaTotal.appendChild(createCell('td', '', false));
+    var labelTotal = createCell('td', 'Assistência total', true);
+    labelTotal.id = 'total-pessoas-label';
+    linhaTotal.appendChild(labelTotal);
+    var valorTotal = createCell('td', '0', true);
+    valorTotal.id = 'numero-total-pessoas';
+    linhaTotal.appendChild(valorTotal);
     tabela.appendChild(linhaTotal);
 
     tabela.querySelectorAll('.participante-checkbox').forEach(cb => {
-        cb.addEventListener('change', atualizarNumeroTotalPessoas);
+        cb.addEventListener('change', function() {
+            this.parentNode.parentNode.classList.toggle('unchecked', !this.checked);
+            atualizarNumeroTotalPessoas();
+        });
     });
 
     atualizarNumeroTotalPessoas();
@@ -142,15 +192,28 @@ function createCell(tag, text, escape) {
 }
 
 function criarCampoDeEntrada(cell) {
-    var valAnterior = parseInt(cell.textContent) || 0;
+    var assistenciaValue = parseInt(cell.textContent) || 0;
     var input = document.createElement('input');
     input.type = 'number';
+    input.placeholder = assistenciaValue.toString();
     input.classList.add('assistencia-cell-input');
-    input.onblur = function() {
-        var n = this.value || valAnterior;
-        cell.textContent = n + ' pessoa' + (n > 1 ? 's' : '');
-        atualizarNumeroTotalPessoas();
-    };
+    
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+    input.addEventListener('blur', function() {
+        setTimeout(() => {
+            var novo = this.value.trim() === '' ? this.placeholder : this.value;
+            if (novo === '0') {
+                cell.textContent = 'Já Informou';
+                cell.parentNode.querySelector('.participante-checkbox').checked = false;
+                cell.parentNode.classList.add('unchecked');
+            } else {
+                cell.textContent = novo + ' pessoa' + (novo === '1' ? '' : 's');
+                cell.parentNode.querySelector('.participante-checkbox').checked = true;
+                cell.parentNode.classList.remove('unchecked');
+            }
+            atualizarNumeroTotalPessoas();
+        }, 100);
+    });
     cell.textContent = '';
     cell.appendChild(input);
     input.focus();
@@ -161,10 +224,11 @@ function atualizarNumeroTotalPessoas() {
     document.querySelectorAll('.participante-checkbox:checked').forEach(cb => {
         total += parseInt(cb.parentNode.parentNode.cells[2].textContent) || 0;
     });
-    document.getElementById('numero-total-pessoas').textContent = total;
+    var el = document.getElementById('numero-total-pessoas');
+    if (el) el.textContent = total;
 }
 
-// --- LÓGICA DE ENVIAR PDF (ORIGINAL) ---
+// --- Enviar PDF (Navigator.Share) ---
 document.getElementById('pdfButton').addEventListener('click', function () {
     var selecionados = [];
     document.querySelectorAll('.participante-checkbox:checked').forEach(cb => {
@@ -174,7 +238,6 @@ document.getElementById('pdfButton').addEventListener('click', function () {
 
     if (selecionados.length === 0) return;
 
-    // Cálculos de layout originais
     const alturaUtil = alturaPagina - 60;
     const hLinha = Math.min(50, (alturaUtil / (selecionados.length + 2)));
     const fSize = Math.max(12, hLinha * 0.45);
@@ -212,7 +275,7 @@ document.getElementById('pdfButton').addEventListener('click', function () {
     pdfMake.createPdf(docDefinition).getBuffer(function (buffer) {
         var file = new File([buffer], 'enquete_' + dataFormatada + '.pdf', { type: 'application/pdf' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'Enquete Zoom' });
+            navigator.share({ files: [file], title: 'Enquete' });
         } else {
             pdfMake.createPdf(docDefinition).download('enquete_' + dataFormatada + '.pdf');
         }
